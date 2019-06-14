@@ -32,7 +32,7 @@ def main(args):
 
     for protein, rows in protein_dict.items():
         #print(protein, len(rows))
-        if len(rows) > 1:
+        if len(rows) > 0:
             max_data_points = 0
             all_values = []
             for row in rows:
@@ -45,7 +45,6 @@ def main(args):
             minimum_intensity = min(all_values)
             maximum_intensity = max(all_values)
 
-            #print(minimum_intensity, maximum_intensity)
 
             reference = {}
             for max_id, row in enumerate(rows):
@@ -55,7 +54,7 @@ def main(args):
                 if used_data == max_data_points:
                     reference[max_id] = row
 
-            if len(reference) > 1:
+            if len(reference) > 0:
                 total_intensity = 0
                 greatest_id = 0
                 for max_id, row in reference.items():
