@@ -2,9 +2,10 @@ from setuptools import setup
 
 version = '0.0.01'
 
-namespace_packages = []
+namespace_packages = ['grollup']
 
-packages = ['grollup']
+packages = ['grollup.rollup',
+            'grollup.proteins']
 
 scripts = ['bin/ghostrollup']
 
