@@ -1,0 +1,90 @@
+import yaml
+import datetime
+from os import listdir
+from os.path import isfile, join
+
+
+
+with open('snakeconfig.yaml', 'r') as stream:
+    config = yaml.load(stream)
+
+
+SAMPLES = [assay.strip(".raw") for assay in listdir(config['raw_file_path']) if isfile(join(config['raw_file_path'], assay))]
+
+print(SAMPLES)
+
+
+rule all:
+    input:
+        config['alignment_path']+datetime.datetime.now().strftime("%Y%m%d_")+"consensus_clusters.tsv"
+        
+
+rule convert_raw_files:
+    input:
+        config['raw_file_path']+"{sample}.raw"
+    output:
+        config['mzml_path']+"{sample}.mzML"
+    run:
+        command_string = "mono {executable} -i={sample} -o={output_dir} -f=2".format(executable=config['file_converter']['exec_path'],
+                                                                                     sample=input,
+                                                                                     output_dir=config['mzml_path'])
+        print(command_string)
+        shell(command_string)      
+
+
+
+rule find_features:
+    input:
+        config['mzml_path']+"{sample}.mzML"
+
+    output:
+        config['features_path']+"{sample}.features.tsv"
+
+    run:
+        command_string = 'java -jar {executable} --verbose --outDir={features_path} --concurrency={concurrency} {raw_mzml}'.format(executable=config['dinosaur']['exec_path'],
+                                                                                                                                   features_path=config['features_path'],
+                                                                                                                                   concurrency=config['dinosaur']['concurrency'],
+                                                                                                                                   raw_mzml=input) 
+        print(command_string)
+        shell(command_string)
+
+
+rule seperate_chimeric_sequences:
+    input:
+        mzml=config['mzml_path']+"{sample}.mzML",
+        features=config['features_path']+"{sample}.features.tsv"   
+
+    output:
+        config['mgf_path']+"{sample}.mgf"
+
+    run:
+        command_string = 'java -jar {executable} {features} {mzml} {output_path}'.format(executable=config['seperate_chimeras']['exec_path'],
+                                                                                         features=input.features,
+                                                                                         mzml=input.mzml,
+                                                                                         output_path=output)
+        print(command_string)
+        shell(command_string)
+
+rule peptide_search:
+    input:
+        database_file=config['database_path'],
+        mgf=config['mgf_path']+"{sample}.mgf"
+
+    output:
+        config['identifications_path']+"{sample}.mzid"
+
+    run:
+        command_string = "java -Xmx3500M -jar {executable} -s {mgf_path} -d {database_file} -o {output_path}".format(executable=config['peptide_search']['exec_path'],
+                                                                                                                     mgf_path=input.mgf,
+                                                                                                                     database_file=input.database_file,
+                                                                                                                     output_path=output)
+        for option, value in config['peptide_search'].items():
+            if option != 'exec_path':
+                option_string = " -{option} {value}".format(option=option,
+                                                            value=value)
+
+                command_string += option_string
+        print(command_string)
+        shell(command_string)
+
+

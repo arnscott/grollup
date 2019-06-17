@@ -1,0 +1,35 @@
+mzml_path: "/path/to/mzml/"
+features_path: "/path/to/features/"
+mgf_path: "/path/to/mgf/"
+database_path: "/path/to/combined/protein_database/combined.fasta"
+identifications_path: "/path/to/identifications/"
+raw_file_path: "/path/to/raw/files"
+
+
+
+file_converter:
+    exec_path: "venv/bin/file_converter/ThermoRawFileParser.exe"
+
+
+dinosaur:
+    exec_path: "venv/bin/Dinosaur-1.1.3.free.jar"
+    verbose: True
+    concurrency: 4
+
+
+seperate_chimeras:
+    exec_path: "venv/bin/MultiPrecursorMGF.jar"
+
+
+
+peptide_search:
+    exec_path: "venv/bin/MSGFPlus.jar"
+    t: "20ppm"
+    inst: 3
+    ti: "-1,2"
+    ntt: 2
+    tda: 1
+    mod: "MSGFPlus_Mods_oxidation.txt"
+
+
+        
